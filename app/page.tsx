@@ -1,65 +1,270 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { OpenFoodFactsClient } from '@/lib/off.client';
+import { normalizeNutrients100g } from '@/lib/nutrient-helpers';
+import type { OffProduct } from '@/lib/off.types';
+import { BarcodeScanner } from './BarcodeScanner';
+
+const client = new OpenFoodFactsClient();
 
 export default function Home() {
+  const [barcode, setBarcode] = useState('');
+  const [product, setProduct] = useState<OffProduct | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!barcode.trim()) {
+      setError('Please enter a barcode');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setProduct(null);
+
+    try {
+      const response = await client.getProductByBarcode(barcode.trim());
+      setProduct(response.product || null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleScanSuccess = async (decodedText: string) => {
+    setShowScanner(false);
+    setBarcode(decodedText);
+    setLoading(true);
+    setError(null);
+    setProduct(null);
+
+    try {
+      const response = await client.getProductByBarcode(decodedText);
+      setProduct(response.product || null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const nutrients = normalizeNutrients100g(product?.nutriments);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-3 sm:p-4 md:p-8">
+      <main className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-2 text-center">
+            🥗 Food Nutrient Scanner
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-sm sm:text-base text-gray-600 text-center mb-6 sm:mb-8">
+            Enter a barcode to view nutritional information
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+          <form onSubmit={handleSearch} className="mb-6 sm:mb-8">
+            <div className="flex flex-col gap-3">
+              <input
+                type="text"
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value)}
+                placeholder="Enter barcode (e.g., 3017624010701)"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-base sm:text-lg"
+                disabled={loading}
+              />
+              <div className="flex gap-2 sm:gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowScanner(true)}
+                  disabled={loading}
+                  className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 justify-center text-sm sm:text-base"
+                >
+                  📷 Scan
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 px-4 sm:px-8 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
+                >
+                  {loading ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+            </div>
+          </form>
+
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
+              <p className="text-red-700">{error}</p>
+            </div>
+          )}
+
+          {product && (
+            <div className="space-y-4 sm:space-y-6">
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg sm:rounded-xl p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+                  {product.image_url && (
+                    <img
+                      src={product.image_url}
+                      alt={product.product_name || 'Product'}
+                      className="w-24 h-24 sm:w-32 sm:h-32 object-contain rounded-lg bg-white p-2 mx-auto sm:mx-0"
+                    />
+                  )}
+                  <div className="flex-1 w-full">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+                      {product.product_name || 'Unknown Product'}
+                    </h2>
+                    {product.brands && (
+                      <p className="text-gray-600 text-sm sm:text-lg mb-1">
+                        <span className="font-semibold">Brand:</span> {product.brands}
+                      </p>
+                    )}
+                    {product.serving_size && (
+                      <p className="text-gray-600 text-sm sm:text-base">
+                        <span className="font-semibold">Serving size:</span> {product.serving_size}
+                      </p>
+                    )}
+                    <p className="text-gray-500 text-xs sm:text-sm mt-2">
+                      Barcode: {product.code}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t-2 border-gray-200 pt-4 sm:pt-6">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">
+                  Nutritional Information (per 100g)
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  {nutrients.energyKcal !== undefined && (
+                    <NutrientCard
+                      label="Energy"
+                      value={`${nutrients.energyKcal} kcal`}
+                      icon="⚡"
+                    />
+                  )}
+                  {nutrients.energyKj !== undefined && (
+                    <NutrientCard
+                      label="Energy"
+                      value={`${nutrients.energyKj} kJ`}
+                      icon="⚡"
+                    />
+                  )}
+                  {nutrients.fat !== undefined && (
+                    <NutrientCard
+                      label="Fat"
+                      value={`${nutrients.fat} g`}
+                      icon="🧈"
+                    />
+                  )}
+                  {nutrients.saturatedFat !== undefined && (
+                    <NutrientCard
+                      label="Saturated Fat"
+                      value={`${nutrients.saturatedFat} g`}
+                      icon="🧈"
+                    />
+                  )}
+                  {nutrients.carbs !== undefined && (
+                    <NutrientCard
+                      label="Carbohydrates"
+                      value={`${nutrients.carbs} g`}
+                      icon="🌾"
+                    />
+                  )}
+                  {nutrients.sugars !== undefined && (
+                    <NutrientCard
+                      label="Sugars"
+                      value={`${nutrients.sugars} g`}
+                      icon="🍯"
+                    />
+                  )}
+                  {nutrients.fiber !== undefined && (
+                    <NutrientCard
+                      label="Fiber"
+                      value={`${nutrients.fiber} g`}
+                      icon="🌿"
+                    />
+                  )}
+                  {nutrients.protein !== undefined && (
+                    <NutrientCard
+                      label="Protein"
+                      value={`${nutrients.protein} g`}
+                      icon="💪"
+                    />
+                  )}
+                  {nutrients.salt !== undefined && (
+                    <NutrientCard
+                      label="Salt"
+                      value={`${nutrients.salt} g`}
+                      icon="🧂"
+                    />
+                  )}
+                  {nutrients.sodium !== undefined && (
+                    <NutrientCard
+                      label="Sodium"
+                      value={`${nutrients.sodium} g`}
+                      icon="🧂"
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <p className="text-sm text-blue-800">
+                  Data provided by{' '}
+                  <a
+                    href="https://world.openfoodfacts.org"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline font-semibold hover:text-blue-900"
+                  >
+                    Open Food Facts
+                  </a>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!product && !error && !loading && (
+            <div className="text-center py-8 sm:py-12 text-gray-500">
+              <p className="text-base sm:text-lg mb-3 sm:mb-4">👆 Enter a barcode to get started</p>
+              <p className="text-xs sm:text-sm">
+                Try example: <button
+                  onClick={() => setBarcode('3017624010701')}
+                  className="text-green-600 hover:text-green-700 font-semibold underline"
+                >
+                  3017624010701 (Nutella)
+                </button>
+              </p>
+            </div>
+          )}
         </div>
       </main>
+
+      {showScanner && (
+        <BarcodeScanner
+          onScanSuccess={handleScanSuccess}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function NutrientCard({ label, value, icon }: { label: string; value: string; icon: string }) {
+  return (
+    <div className="bg-white border-2 border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
+      <div className="flex items-center gap-2">
+        <span className="text-xl sm:text-2xl">{icon}</span>
+        <div>
+          <p className="text-xs sm:text-sm text-gray-600 font-medium">{label}</p>
+          <p className="text-lg sm:text-xl font-bold text-gray-800">{value}</p>
+        </div>
+      </div>
     </div>
   );
 }
