@@ -1,19 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { OpenFoodFactsClient } from '@/lib/off.client';
 import { normalizeNutrients100g } from '@/lib/nutrient-helpers';
 import type { OffProduct } from '@/lib/off.types';
 import { BarcodeScanner } from './BarcodeScanner';
+import { useSession } from '@/lib/auth-client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const client = new OpenFoodFactsClient();
 
 export default function Home() {
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
   const [barcode, setBarcode] = useState('');
   const [product, setProduct] = useState<OffProduct | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showScanner, setShowScanner] = useState(false);
+
+  useEffect(() => {
+    if (!isPending && session) {
+      router.push('/dashboard');
+    }
+  }, [session, isPending, router]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,15 +69,35 @@ export default function Home() {
 
   const nutrients = normalizeNutrients100g(product?.nutriments);
 
+  if (isPending) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-green-50 to-blue-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-3 sm:p-4 md:p-8">
+    <div className="min-h-screen bg-linear-to-br from-green-50 to-blue-50 p-3 sm:p-4 md:p-8">
       <main className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-2 text-center">
-            🥗 Food Nutrient Scanner
+        <Card className="bg-card rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
+          <div className="flex justify-end gap-2 mb-4">
+            <Link href="/signin">
+              <Button variant="outline">Sign In</Button>
+            </Link>
+            <Link href="/signup">
+              <Button>Sign Up</Button>
+            </Link>
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2 text-center">
+            🥗 Metis - Calorie Tracker
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 text-center mb-6 sm:mb-8">
-            Enter a barcode to view nutritional information
+          <p className="text-sm sm:text-base text-muted-foreground text-center mb-6 sm:mb-8">
+            Track your nutrition, reach your goals
           </p>
 
           <form onSubmit={handleSearch} className="mb-6 sm:mb-8">
@@ -74,7 +107,7 @@ export default function Home() {
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
                 placeholder="Enter barcode (e.g., 3017624010701)"
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-base sm:text-lg"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-input rounded-lg focus:outline-none focus:border-primary text-base sm:text-lg bg-background"
                 disabled={loading}
               />
               <div className="flex gap-2 sm:gap-3">
@@ -82,14 +115,14 @@ export default function Home() {
                   type="button"
                   onClick={() => setShowScanner(true)}
                   disabled={loading}
-                  className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 justify-center text-sm sm:text-base"
+                  className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 justify-center text-sm sm:text-base"
                 >
                   📷 Scan
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 px-4 sm:px-8 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
+                  className="flex-1 px-4 sm:px-8 py-2.5 sm:py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
                 >
                   {loading ? 'Searching...' : 'Search'}
                 </button>
@@ -105,7 +138,7 @@ export default function Home() {
 
           {product && (
             <div className="space-y-4 sm:space-y-6">
-              <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg sm:rounded-xl p-4 sm:p-6">
+              <div className="bg-linear-to-r from-green-50 to-blue-50 rounded-lg sm:rounded-xl p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
                   {product.image_url && (
                     <img
@@ -242,7 +275,7 @@ export default function Home() {
               </p>
             </div>
           )}
-        </div>
+        </Card>
       </main>
 
       {showScanner && (
