@@ -1,17 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signIn, signUp } from "@/lib/auth-client";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FullPageSpinner } from "@/components/full-page-spinner";
 import Link from "next/link";
 
 export default function SignInPage() {
+  return (
+    <Suspense fallback={<FullPageSpinner />}>
+      <SignInForm />
+    </Suspense>
+  );
+}
+
+function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,10 +42,10 @@ export default function SignInPage() {
       if (result.error) {
         setError(result.error.message || "Failed to sign in");
       } else {
-        router.push("/dashboard");
+        router.push(redirectTo);
         router.refresh();
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred during sign in");
     } finally {
       setLoading(false);
@@ -89,7 +100,7 @@ export default function SignInPage() {
           </form>
 
           <div className="mt-4 text-center text-sm">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/signup" className="text-primary hover:underline font-semibold">
               Sign Up
             </Link>

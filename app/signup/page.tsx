@@ -1,17 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signUp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FullPageSpinner } from "@/components/full-page-spinner";
 import Link from "next/link";
 
 export default function SignUpPage() {
+  return (
+    <Suspense fallback={<FullPageSpinner />}>
+      <SignUpForm />
+    </Suspense>
+  );
+}
+
+function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,10 +57,10 @@ export default function SignUpPage() {
       if (result.error) {
         setError(result.error.message || "Failed to sign up");
       } else {
-        router.push("/dashboard");
+        router.push(redirectTo);
         router.refresh();
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred during sign up");
     } finally {
       setLoading(false);

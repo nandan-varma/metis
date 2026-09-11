@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Droplet, GlassWater, CupSoda } from "lucide-react";
 
 interface WaterIntakeDialogProps {
   open: boolean;
@@ -13,9 +14,9 @@ interface WaterIntakeDialogProps {
 }
 
 const presetAmounts = [
-  { ml: 250, label: "1 Glass", icon: "🥛" },
-  { ml: 500, label: "1 Bottle", icon: "💧" },
-  { ml: 1000, label: "1 Liter", icon: "🍶" },
+  { ml: 250, label: "1 Glass", icon: GlassWater },
+  { ml: 500, label: "1 Bottle", icon: CupSoda },
+  { ml: 1000, label: "1 Liter", icon: Droplet },
 ];
 
 export function WaterIntakeDialog({ open, onOpenChange, onSuccess, currentIntake }: WaterIntakeDialogProps) {
@@ -58,7 +59,7 @@ export function WaterIntakeDialog({ open, onOpenChange, onSuccess, currentIntake
           {/* Current Progress */}
           <Card className="p-6">
             <div className="text-center space-y-4">
-              <div className="text-5xl font-bold text-primary">
+              <div className="text-5xl font-mono font-bold tabular-nums text-primary">
                 {(currentIntake / 1000).toFixed(1)}L
               </div>
               <p className="text-sm text-muted-foreground">
@@ -70,11 +71,13 @@ export function WaterIntakeDialog({ open, onOpenChange, onSuccess, currentIntake
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <div className="flex justify-center gap-1">
+              <div className="flex justify-center gap-1.5">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <span key={i} className="text-2xl">
-                    {i < glassesCount ? "💧" : "⚪"}
-                  </span>
+                  <Droplet
+                    key={i}
+                    className={i < glassesCount ? "size-5 fill-primary text-primary" : "size-5 text-muted-foreground/40"}
+                    aria-hidden="true"
+                  />
                 ))}
               </div>
             </div>
@@ -92,7 +95,7 @@ export function WaterIntakeDialog({ open, onOpenChange, onSuccess, currentIntake
                   disabled={loading}
                   className="h-auto py-4 flex flex-col gap-2"
                 >
-                  <span className="text-2xl">{preset.icon}</span>
+                  <preset.icon className="size-6" aria-hidden="true" />
                   <span className="text-xs">{preset.label}</span>
                   <span className="text-xs text-muted-foreground">{preset.ml}ml</span>
                 </Button>

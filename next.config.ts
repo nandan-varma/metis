@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "**.openfoodfacts.org" },
+      { protocol: "https", hostname: "**.openfoodfacts.net" },
+    ],
+  },
 };
 
 export default nextConfig;

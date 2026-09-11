@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sunrise, SunMedium, Moon, Apple } from "lucide-react";
+
+type MealType = "breakfast" | "lunch" | "dinner" | "snack";
 
 interface ManualFoodEntryProps {
   open: boolean;
@@ -26,7 +29,7 @@ export function ManualFoodEntry({ open, onOpenChange, onSuccess }: ManualFoodEnt
     fat: "",
     fiber: "",
     sugar: "",
-    mealType: "breakfast" as "breakfast" | "lunch" | "dinner" | "snack",
+    mealType: "breakfast" as MealType,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,16 +141,24 @@ export function ManualFoodEntry({ open, onOpenChange, onSuccess }: ManualFoodEnt
             <Label htmlFor="mealType">Meal Type</Label>
             <Select
               value={formData.mealType}
-              onValueChange={(value: any) => setFormData({ ...formData, mealType: value })}
+              onValueChange={(value: MealType) => setFormData({ ...formData, mealType: value })}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="breakfast">🌅 Breakfast</SelectItem>
-                <SelectItem value="lunch">☀️ Lunch</SelectItem>
-                <SelectItem value="dinner">🌙 Dinner</SelectItem>
-                <SelectItem value="snack">🍎 Snack</SelectItem>
+                <SelectItem value="breakfast">
+                  <Sunrise className="size-4" aria-hidden="true" /> Breakfast
+                </SelectItem>
+                <SelectItem value="lunch">
+                  <SunMedium className="size-4" aria-hidden="true" /> Lunch
+                </SelectItem>
+                <SelectItem value="dinner">
+                  <Moon className="size-4" aria-hidden="true" /> Dinner
+                </SelectItem>
+                <SelectItem value="snack">
+                  <Apple className="size-4" aria-hidden="true" /> Snack
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>

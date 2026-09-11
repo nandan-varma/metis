@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
     const date = searchParams.get("date");
     const limit = parseInt(searchParams.get("limit") || "100");
 
-    let conditions = [eq(foodEntries.userId, session.user.id)];
+    const conditions = [eq(foodEntries.userId, session.user.id)];
 
     if (date) {
       const startOfDay = new Date(date);

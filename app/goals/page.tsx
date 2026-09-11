@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Link from "next/link";
+import { AppHeader } from "@/components/app-header";
+import { FullPageSpinner } from "@/components/full-page-spinner";
 
 export default function GoalsPage() {
   const router = useRouter();
@@ -87,14 +89,7 @@ export default function GoalsPage() {
   };
 
   if (isPending || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <FullPageSpinner />;
   }
 
   if (!session) {
@@ -103,14 +98,7 @@ export default function GoalsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">⚙️ Goals & Settings</h1>
-          <Link href="/dashboard">
-            <Button variant="outline">← Back to Dashboard</Button>
-          </Link>
-        </div>
-      </header>
+      <AppHeader title="Goals & Settings" description="Configure your daily calorie and macro targets" />
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         <Card>
