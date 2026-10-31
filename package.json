@@ -48,7 +48,7 @@
     "input-otp": "^1.5.0",
     "kysely": "^0.29.6",
     "lucide-react": "^1.55.0",
-    "next": "16.4.0",
+    "next": "16.4.1",
     "next-themes": "^0.4.6",
     "react": "19.3.0",
     "react-day-picker": "^9.14.0",
